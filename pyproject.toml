@@ -1,0 +1,19 @@
+[project]
+name = "bus-tracker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "pandas>=2.2.3",
+    "ruff>=0.6.7",
+    "sqlalchemy>=2.0.35",
+]
+
+[project.scripts]
+hello = "bus_tracker:hello"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
