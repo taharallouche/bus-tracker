@@ -1,64 +1,36 @@
-from datetime import datetime
-from pathlib import Path
+from fastapi import Depends, FastAPI
+from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session
 
-import pandas as pd
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-LOGS_FILE_PATH = Path(__file__).parent.parent / "data" / "bus_logs.csv"
-
+from bus_tracker import schemas
+from bus_tracker.crud import create_log, get_logs_by_bus
+from bus_tracker.dependencies import get_db
 
 app = FastAPI(title="Bus Tracker", version="0.1.0")
 
 
-class Location(BaseModel):
-    latitude: float
-    longitude: float
-
-
-class Update(BaseModel):
-    bus_id: int
-    location: Location
-
-
-class LogEntry(BaseModel):
-    update: Update
-    timestamp: datetime
-
-    def to_row(self) -> pd.DataFrame:
-        return pd.DataFrame(
-            {
-                "bus_id": [self.update.bus_id],
-                "latitude": [self.update.location.latitude],
-                "longitude": [self.update.location.longitude],
-                "timestamp": [self.timestamp],
-            }
-        )
-
-
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {"message": "Ye fatte7 ye razze9"}
+    return """
+    <html>
+        <head>
+            <title>Welcome to My Bus Tracker</title>
+        </head>
+        <body>
+            <h1>Welcome to My Bus Tracker</h1>
+            <p>This is a simple FastAPI application.</p>
+        </body>
+    </html>
+    """
 
 
-@app.get("/bus/{bus_id}")
-async def read_item(bus_id: int):
-    logs = pd.read_csv(LOGS_FILE_PATH)
-    bus_logs = logs[logs["bus_id"] == bus_id]
-    latest_log = bus_logs.sort_values("timestamp").iloc[-1]
-    return {
-        "bus_id": bus_id,
-        "latitude": latest_log["latitude"],
-        "longitude": latest_log["longitude"],
-    }
+@app.post("/logs", response_model=schemas.Log)
+def add_log(log: schemas.LogCreate, db: Session = Depends(get_db)):
+    db_log = create_log(db, log)
+    return schemas.Log.model_validate(db_log)
 
 
-@app.post("/bus/{bus_id}")
-async def create_item(bus_id: int, update: Update):
-    logs = pd.read_csv(LOGS_FILE_PATH)
-    new_entry = LogEntry(update=update, timestamp=datetime.now())
-
-    logs = pd.concat([logs, new_entry.to_row()], ignore_index=True)
-    logs.to_csv(LOGS_FILE_PATH, index=False)
-
-    return "Thanks for the update"
+@app.get("/bus/{line_number}/logs", response_model=list[schemas.Log])
+def get_bus(line_number: int, db: Session = Depends(get_db)):
+    logs = get_logs_by_bus(db, line_number)
+    return [schemas.Log.model_validate(log) for log in logs]
