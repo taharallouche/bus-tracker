@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends, FastAPI, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -31,6 +33,10 @@ def add_log(log: schemas.LogCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/bus/{line_number}/logs", response_model=list[schemas.Log])
-def get_bus(line_number: int, limit=Query(default=10), db: Session = Depends(get_db)):
+def get_bus(
+    line_number: int,
+    limit: Annotated[int, Query(gt=0)] = 10,
+    db: Session = Depends(get_db),
+):
     logs = get_logs_by_bus(db, line_number, limit=limit)
     return [schemas.Log.model_validate(log) for log in logs]
