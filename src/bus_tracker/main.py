@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Query
+from fastapi import Depends, FastAPI, Query, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -26,7 +26,7 @@ async def root():
     """
 
 
-@app.post("/logs", response_model=schemas.Log)
+@app.post("/logs", response_model=schemas.Log, status_code=status.HTTP_201_CREATED)
 def add_log(log: schemas.LogCreate, db: Session = Depends(get_db)):
     db_log = create_log(db, log)
     return schemas.Log.model_validate(db_log)
