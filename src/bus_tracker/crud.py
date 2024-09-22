@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 import bus_tracker.models as models
@@ -43,10 +42,6 @@ def get_logs_by_bus(
 
 
 def create_log(db: Session, log: schemas.LogCreate) -> models.Log:
-    bus = get_bus(db, log.line_number)
-    if not bus:
-        raise HTTPException(status_code=404, detail=f"Bus {log.line_number} not found")
-
     db_log = models.Log(**log.model_dump())
     db.add(db_log)
     db.commit()

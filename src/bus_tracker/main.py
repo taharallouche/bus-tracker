@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from bus_tracker import schemas
-from bus_tracker.crud import create_log, get_logs_by_bus
+from bus_tracker.crud import create_log, get_bus, get_logs_by_bus
 from bus_tracker.dependencies import get_db
 
 app = FastAPI(title="Bus Tracker", version="0.1.0")
@@ -28,12 +28,15 @@ async def root():
 
 @app.post("/logs", response_model=schemas.Log, status_code=status.HTTP_201_CREATED)
 def add_log(log: schemas.LogCreate, db: Session = Depends(get_db)):
+    bus = get_bus(db, log.line_number)
+    if bus is None:
+        raise HTTPException(status_code=404, detail=f"Bus {log.line_number} not found")
     db_log = create_log(db, log)
     return schemas.Log.model_validate(db_log)
 
 
 @app.get("/bus/{line_number}/logs", response_model=list[schemas.Log])
-def get_bus(
+def get_bus_logs(
     line_number: int,
     limit: Annotated[int, Query(gt=0)] = 10,
     db: Session = Depends(get_db),
