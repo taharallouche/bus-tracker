@@ -32,6 +32,7 @@ def get_logs_by_bus(db: Session, line_number: int, skip: int = 0, limit: int = 1
     return (
         db.query(models.Log)
         .filter(models.Log.line_number == line_number)
+        .order_by(models.Log.timestamp.desc())
         .offset(skip)
         .limit(limit)
         .all()
