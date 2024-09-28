@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
@@ -8,7 +9,18 @@ from bus_tracker import schemas
 from bus_tracker.crud import create_log, get_bus, get_logs_by_bus
 from bus_tracker.dependencies import get_db
 
+# Run it with:
+# uvicorn src.bus_tracker.main:app  --reload --host 0.0.0.0 --port 8000
+
 app = FastAPI(title="Bus Tracker", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8081"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/", response_class=HTMLResponse)
