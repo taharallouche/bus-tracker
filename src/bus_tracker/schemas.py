@@ -14,6 +14,7 @@ class BusCreate(BusBase):
 class Bus(BusBase):
     class Config:
         orm_mode = True
+        from_attributes = True
 
 
 class LogBase(BaseModel):

@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from bus_tracker import schemas
-from bus_tracker.crud import create_log, get_bus, get_logs_by_bus
+from bus_tracker.crud import create_log, get_bus, get_buses, get_logs_by_bus
 from bus_tracker.dependencies import get_db
 
 # Run it with:
@@ -55,3 +55,9 @@ def get_bus_logs(
 ):
     logs = get_logs_by_bus(db, line_number, limit=limit)
     return [schemas.Log.model_validate(log) for log in logs]
+
+
+@app.get("/buses", response_model=list[schemas.Bus])
+def get_all_buses(db: Session = Depends(get_db)):
+    buses = get_buses(db)
+    return [schemas.Bus.model_validate(bus) for bus in buses]
